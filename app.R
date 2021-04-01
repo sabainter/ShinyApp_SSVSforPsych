@@ -10,6 +10,8 @@ library(formattable)
 
 # Comment
 
+# Thomas' comment
+
 # toKeep function--------------
 
 toKeep <- function(x) is.numeric(x) | is.factor(x)
