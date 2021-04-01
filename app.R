@@ -1,8 +1,3 @@
-# Things to change:
-  # Change "Waiting for analysis" when submit is pressed
-  # Fix random "tab" output
-  # Fix column widths in new table
-
 options(digits=9)
 options(warn=-1) #Suppress Warnings
 options(shiny.maxRequestSize=20*1024^2) #max file size = 20 MB
@@ -202,7 +197,7 @@ predictors and set the prior inclusion probability at 0.50 (as Bainter et al. (2
     tabsetPanel(id = "inTabset",
                 tabPanel("Data descriptives",
                          tableOutput("varnames")),
-                         #formattableOutput("colors"), 
+                         #formattableOutput("colors"), # Table with color formatting (red for factors) but I don't think we need anymore
                 tabPanel("SSVS analysis results",
                          h4("Status:"),
                          verbatimTextOutput('contents'),
@@ -263,6 +258,7 @@ server<-function(input, output, session) {
     varlist
   })
   
+  # Below is the code for the color formatted table
   # output$colors <- renderFormattable({
   #   if (is.null(input$file1))
   #     return()
@@ -289,6 +285,8 @@ server<-function(input, output, session) {
   #   ))
   # })
   # 
+  
+  # Status bar
   output$contents <- renderText({
     varClass <- as.vector(sapply(df(),class))
     if (any(varClass == 'factor')){
@@ -323,8 +321,6 @@ server<-function(input, output, session) {
  
   })
   
-
-
 
   # Select the dependent variable------------------------------
 
