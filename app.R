@@ -112,23 +112,23 @@ ui <- shinyUI(
   
   sidebarPanel(
     
-    tags$strong("How to cite"),
+    #tags$strong("How to cite"),
     
-    p("This web tool may be cited in APA style in the following manner:"),
+    #p("This web tool may be cited in APA style in the following manner:"),
     
-    p("Bainter, S. A., McCauley, T. G., Wager, T., & Losin, E. A. R. (2020). Improving practices for selecting a subset of important predictors in psychology: An application to predicting pain. Advances in Methods in Psychological Science, XX(X), XXXX-XXXX. https://doi.org/10.1177/2515245919885617"),
+    #p("Bainter, S. A., McCauley, T. G., Wager, T., & Losin, E. A. R. (2020). Improving practices for selecting a subset of important predictors in psychology: An application to predicting pain. Advances in Methods in Psychological Science, XX(X), XXXX-XXXX. https://doi.org/10.1177/2515245919885617"),
     
-    tags$strong("The purpose of SSVS, and how to use this tool"),
+    #tags$strong("The purpose of SSVS, and how to use this tool"),
     
-    p("The overall goal of SSVS is to provide information about the relative importance of predictors, accounting for uncertainty in which other predictors are included in the model. SSVS samples thousands of regression models in order to characterize the model uncertainty regarding both the predictor set and the regression parameters. The models are selected using a sampling process that is designed to select among “good” models, that is, models with high probability."),
+    #p("The overall goal of SSVS is to provide information about the relative importance of predictors, accounting for uncertainty in which other predictors are included in the model. SSVS samples thousands of regression models in order to characterize the model uncertainty regarding both the predictor set and the regression parameters. The models are selected using a sampling process that is designed to select among “good” models, that is, models with high probability."),
       
-    p("After sampling, rather than selecting the best model according to a specified criterion (e.g., the best Akaike’s or Bayesian information criterion or the highest model R2), researchers can examine the proportion of times each predictor was selected, which provides information about which predictors reliably predict the outcome, accounting for uncertainty in the other predictors in the model. Please see Bainter, McCauley, Wager, and Losin (2020) for more details."),
+    #p("After sampling, rather than selecting the best model according to a specified criterion (e.g., the best Akaike’s or Bayesian information criterion or the highest model R2), researchers can examine the proportion of times each predictor was selected, which provides information about which predictors reliably predict the outcome, accounting for uncertainty in the other predictors in the model. Please see Bainter, McCauley, Wager, and Losin (2020) for more details."),
     
-    p("The key quantity obtained by SSVS is the marginal inclusion probability (MIP), which is the proportion of times each predictor was included in the sampled models. Predictors with higher MIPs are consistent predictors of the dependent variable, accounting for uncertainty in the other variables included in the models."),
+    #p("The key quantity obtained by SSVS is the marginal inclusion probability (MIP), which is the proportion of times each predictor was included in the sampled models. Predictors with higher MIPs are consistent predictors of the dependent variable, accounting for uncertainty in the other variables included in the models."),
     
     tags$strong("Pre-requisites and constraints"),
     
-    p("Unfortunately, SSVS cannot variables with a categorical data structure. In addition, SSVS requires predictor variables to be standardized before analysis: because the priors have a fixed scale, predictors on different scales will differentially influence results. Because of this, SSVSforPsych automatically standardizes all predictors selected for analysis. Finally, SSVS cannot analyze data with missing values, so please upload data that has complete cases."),
+    p("Unfortunately, SSVS cannot handle variables with a categorical data structure. In addition, SSVS requires predictor variables to be standardized before analysis: because the priors have a fixed scale, predictors on different scales will differentially influence results. Because of this, SSVSforPsych automatically standardizes all predictors selected for analysis. Finally, SSVS cannot analyze data with missing values, so please upload data that has complete cases."),
     
     #htmlOutput("missingNote"),
     
@@ -198,6 +198,21 @@ predictors and set the prior inclusion probability at 0.50 (as Bainter et al. (2
     
     # Output: Data file ----
     tabsetPanel(id = "inTabset",
+                tabPanel("Background",
+                         h4("The purpose of SSVS, and how to use this tool:"),
+                         
+                         p("The overall goal of SSVS is to provide information about the relative importance of predictors, accounting for uncertainty in which other predictors are included in the model. SSVS samples thousands of regression models in order to characterize the model uncertainty regarding both the predictor set and the regression parameters. The models are selected using a sampling process that is designed to select among “good” models, that is, models with high probability."),
+                         
+                         p("After sampling, rather than selecting the best model according to a specified criterion (e.g., the best Akaike’s or Bayesian information criterion or the highest model R2), researchers can examine the proportion of times each predictor was selected, which provides information about which predictors reliably predict the outcome, accounting for uncertainty in the other predictors in the model. Please see Bainter, McCauley, Wager, and Losin (2020) for more details."),
+                         
+                         p("The key quantity obtained by SSVS is the marginal inclusion probability (MIP), which is the proportion of times each predictor was included in the sampled models. Predictors with higher MIPs are consistent predictors of the dependent variable, accounting for uncertainty in the other variables included in the models."),
+                         h4("How to cite:"),
+                         
+                         p("This web tool may be cited in APA style in the following manner:"),
+                         
+                         p("Bainter, S. A., McCauley, T. G., Wager, T., & Losin, E. A. R. (2020). Improving practices for selecting a subset of important predictors in psychology: An application to predicting pain. Advances in Methods in Psychological Science, XX(X), XXXX-XXXX. https://doi.org/10.1177/2515245919885617"),
+                         
+                ),
                 tabPanel("Data descriptives",
                          tableOutput("varnames")),
                          #formattableOutput("colors"), # Table with color formatting (red for factors) but I don't think we need anymore
