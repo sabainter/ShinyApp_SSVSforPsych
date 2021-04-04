@@ -7,6 +7,7 @@ library(data.table)
 library(ggplot2)
 library(dplyr)
 library(formattable)
+library(shinyalert)
 
 # Comment
 
@@ -97,7 +98,7 @@ SSVS<-function(y,x,xp,
 ui <- shinyUI(
   
   fluidPage(
-    
+    #useShinyalert()  # Instantiate shiny alert. LIKELY WILL NOT USE,
     tags$style(type="text/css",
                ".shiny-output-error { visibility: hidden; }",
                ".shiny-output-error:before { visibility: hidden; }",
@@ -267,12 +268,16 @@ server<-function(input, output, session) {
                                                     "max",
                                                     "skew")]
     varClass <- as.vector(sapply(df(),class))
+    varmissing <- sapply(df(), function(x) sum(is.na(x)))
+    
     varlist <- cbind(colnames(df()),
                      desc,
-                     varClass)
+                     varClass,
+                     varmissing)
     colnames(varlist) <- c("Variable",
                            colnames(desc),
-                           "Object_type")
+                           "Object_type",
+                           "NA values")
     varlist
   })
   
@@ -461,12 +466,7 @@ server<-function(input, output, session) {
   # Scale the predictors 
   mydata[,preds] <- scale(mydata[,preds],  scale = FALSE)
   
-  #if(sum(sapply(mydata[,preds], is.numeric)) != ncol(mydata[,preds]))
-  #{
-    #shinyalert("Column Error","Numeric columns are needed",type="error")
-    #returnValue()
-  #}
-  
+
   # Create matrices for the independent and dependent variables to use in SSVS.
   
   # predictor variables
@@ -474,6 +474,36 @@ server<-function(input, output, session) {
   
   # outcome variable
   values$dependentSSVS <- as.matrix(mydata[,dependent])
+  
+  # Pop up alert using shinyalert (LIKELY WILL NOT USE)
+  # if (sum(is.na(values$dependentSSVS))>0){
+  #   shinyalert(paste(c("Oops!", sum(is.na(values$dependentSSVS)),"missing values found. Would you like to use only complete cases? This will reduce your sample size to",length(complete.cases(values$dependentSSVS)),"from",length(values$dependentSSVS)))
+  #                       ,type = "error")
+  #   values$dependentSSVS <- complete.cases(values$dependentSSVS)
+  # }
+  
+  # Pop up window using base Shiny (PLACEHOLDER CODE)
+  dataModal <- function(failed = FALSE) {
+    modalDialog(
+      textInput("dataset", "Choose data set",
+                placeholder = 'Try "mtcars" or "abc"'
+      ),
+      span('(Try the name of a valid data object like "mtcars", ',
+           'then a name of a non-existent object like "abc")'),
+      if (failed)
+        div(tags$b("Invalid name of data object", style = "color: red;")),
+      
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("ok", "OK")
+      )
+    )
+  }
+  
+  # Activate pop-up window if dependent variable has missing values
+  if (sum(is.na(values$dependentSSVS))>0){
+  showModal(dataModal())
+  }
   
   # randomFixed set.seed
   if (input$randomFixed == "fix"){ 
@@ -533,13 +563,13 @@ server<-function(input, output, session) {
     #   return("Error. Please convert factor variables to perform the analysis.")
     # }
      if (sum(is.na(values$dependentSSVS))>0){
-       return(paste(c("Error.",sum(is.na(df())),"missing values found. Please remove to perform the analysis")))
+       return(paste(c("Error.",sum(is.na(values$dependentSSVS)),"missing values found. Please remove to perform the analysis")))
      }
      if (ncol(values$predsSSVS) <= 1){
        return("Error. Please select at least two predictors")
      }
      return(paste(c("Calculation complete.",input$RunsValue, "MCMC iterations run, results for",as.numeric(input$RunsValue)
-                    -as.numeric(input$BurnInValue), "iterations post-warmup shown below.")))
+                    -as.numeric(input$BurnInValue), "iterations post-warmup shown below for",length(complete.cases(values$dependentSSVS)),"complete cases.")))
   })
 
   # Download the results table -----------------------
