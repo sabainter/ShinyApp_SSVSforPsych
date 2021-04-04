@@ -6,12 +6,7 @@ library(shiny)
 library(data.table)
 library(ggplot2)
 library(dplyr)
-library(formattable)
-
-# Comment
-
-# Thomas' comment
-
+library(BoomSpikeSlab)
 # toKeep function--------------
 
 toKeep <- function(x) is.numeric(x) | is.factor(x)
@@ -116,7 +111,7 @@ ui <- shinyUI(
     
     p("This web tool may be cited in APA style in the following manner:"),
     
-    p("Bainter, S. A., McCauley, T. G., Wager, T., & Losin, E. A. R. (2020). Improving practices for selecting a subset of important predictors in psychology: An application to predicting pain. Advances in Methods in Psychological Science, XX(X), XXXX-XXXX. https://doi.org/10.1177/2515245919885617"),
+    p("Bainter, S. A., McCauley, T. G., Wager, T., & Losin, E. A. R. (2020). Improving practices for selecting a subset of important predictors in psychology: An application to predicting pain. Advances in Methods in Psychological Science, 3(1), 66-80. https://doi.org/10.1177/2515245919885617"),
     
     tags$strong("The purpose of SSVS, and how to use this tool"),
     
@@ -172,6 +167,12 @@ predictors and set the prior inclusion probability at 0.50 (as Bainter et al. (2
     uiOutput("ui.Dependent"),
     tags$hr(),
     
+    # Is the predictor variable dichotomous?
+    tags$strong("Is the dependent variable dichotomous or continuous?"),
+    p("Please indicate whether the dependent variable is dichotomous or continuous. If the the dependent variable is dichotomous, then the analysis will use the logit.spike() function from the BoomSpikeSlab package. If the the dependent variable is continous, then the analysis will use the R code provided by Dr. Brian Reich"),
+    uiOutput("ui.logistic"),
+    tags$hr(),
+    
     # Predictor variables
     tags$strong("Predictor variables"),
     p("Please select the predictor variables in your analysis."),
@@ -197,10 +198,11 @@ predictors and set the prior inclusion probability at 0.50 (as Bainter et al. (2
   mainPanel(
     
     # Output: Data file ----
+    # Output: Data file ----
     tabsetPanel(id = "inTabset",
                 tabPanel("Data descriptives",
                          tableOutput("varnames")),
-                         #formattableOutput("colors"), # Table with color formatting (red for factors) but I don't think we need anymore
+                #formattableOutput("colors"), 
                 tabPanel("SSVS analysis results",
                          h4("Status:"),
                          verbatimTextOutput('contents'),
@@ -211,7 +213,8 @@ predictors and set the prior inclusion probability at 0.50 (as Bainter et al. (2
                          plotOutput("resultsPlot"))
     ) # tabsetPanel end
   ) # mainPanel end
-)) # UI end
+  )) # UI end
+
 
 server<-function(input, output, session) {
   values<-reactiveValues()
@@ -240,7 +243,7 @@ server<-function(input, output, session) {
   })
   
   #Only allow users to include data that is numeric------------------------------
-
+  
   #Produce a table of data descriptives------------------------------
   
   output$varnames <- renderTable({
@@ -261,35 +264,7 @@ server<-function(input, output, session) {
     varlist
   })
   
-  # Below is the code for the color formatted table
-  # output$colors <- renderFormattable({
-  #   if (is.null(input$file1))
-  #     return()
-  #   desc <- as.data.frame(psych::describe(df()))[,c("mean",
-  #                                                   "sd",
-  #                                                   "min",
-  #                                                   "max",
-  #                                                   "skew")]
-  #   desc[,] <- round(desc[,],2)
-  #   varClass <- as.vector(sapply(df(),class))
-  #   varlist <- cbind(colnames(df()),
-  #                    desc,
-  #                    varClass)
-  #   colnames(varlist) <- c("Variable",
-  #                          colnames(desc),
-  #                          "Object_type")
-  #   varlist <- as.data.frame(varlist)
-  #   row.names(varlist) <- c()
-  #   formattable(varlist,list(
-  #   Variable = formatter(.tag = "span", width = '1px'),
-  #   Object_type = formatter("span", 
-  #                       style = x ~ style(
-  #                           color = ifelse(x == 'factor','red','black')))
-  #   ))
-  # })
-  # 
   
-  # Status bar
   output$contents <- renderText({
     varClass <- as.vector(sapply(df(),class))
     if (any(varClass == 'factor')){
@@ -298,13 +273,15 @@ server<-function(input, output, session) {
     return("Waiting for analysis to begin")
   })
   
+  
+  
   # Select the predictor variables------------------------------
   
   output$ui.Predictors <- renderUI ({
     if (is.null(input$file1))
       return()
   
-  # Includes an option for select all so that all variables can be simultaneously selected
+  # Includes an option for select all so that all variables can be simultanesouly selected
   choices = c("Select all", colnames(df())) 
   observe({
     if("Select all" %in% input$Predictors)
@@ -312,18 +289,16 @@ server<-function(input, output, session) {
     else
       selected_choices = input$Predictors
     updateSelectInput(session, "Predictors", selected = selected_choices)
-  
   })
+
   selectInput(inputId = "Predictors",
               label = "",
               choices = choices,
               selected = "",
               multiple = TRUE,
               selectize = TRUE)
-  
- 
   })
-  
+
 
   # Select the dependent variable------------------------------
 
@@ -372,21 +347,18 @@ server<-function(input, output, session) {
   
   output$ui.randomFixed <- renderUI ({
     radioButtons(inputId="randomFixed", label = NULL, inline = TRUE,
-                 c("Fixed" = "fix", "Random" = "rnd"),
+                 c("Fixed" = "fix", 
+                   "Random" = "rnd"),
                  selected = "Fixed")
   })
   
-  # Create an object that returns NAs------------------------------
+  # Select whether the dependent variable is dichotomous or continuous------------------------------
   
-  # TESTING TESTING TESTING TESTING TESTING
-  output$ui.navals<-renderUI ({
-    if (is.null(input$file1))
-      return()
-    
-    textInput(inputId="naval",
-              label="Missing (NA) values code:",
-              value = "NA",
-              width = "100%")  
+  output$ui.logistic <- renderUI ({
+    radioButtons(inputId="logistic", label = NULL, inline = TRUE,
+                 c("Dichotomous" = "dichotomous", 
+                   "Continuous" = "continuous"),
+                 selected = "Dichotomous")
   })
   
   # Create a button that runs the analysis------------------------------
@@ -396,26 +368,8 @@ server<-function(input, output, session) {
       return()
     actionButton("go","Run Analysis", width = "100%", icon = icon("fa fa-thumbs-up"))
   })
+
   
-  # Create a citation for the results------------------------------
-  
-  # output$citation<-renderUI({
-  #   str1 <- paste0("Acknowledgements:")
-  #   str2 <- paste0("Thank you to Dr. Brian Reich of NCSU (https://www4.stat.ncsu.edu/~reich/) for posting R code for SSVS, which was used to help build this app. ")
-  #   str3 <- paste0("")
-  #   str4 <- paste0("Preprint available at https://psyarxiv.com/j8t7s/")
-  #   str5 <- paste0("")
-  #   str6 <- paste0("If you encounter any problems, please contact us at ssvsforpsych@gmail.com")
-  #   
-  #   HTML(paste(str1, str2, str3, str4, str5, str6, sep = '<br/><br/>'))
-  # })
-  
-  # output$missingNote<-renderUI({
-  #   str1 <- paste0("Please upload data that does not have any missing values, as the SSVS application is not equipped to handle missing data.")
-  #   
-  #  # HTML(paste(str1,sep = '<br/><br/>'))
-  # })
-    
   # Analyses code -----------------------------------------------------------
 
   observeEvent(input$go, { #Once the "go" button is hit, InterActive looks at all the ui input and runs the model.
@@ -446,12 +400,6 @@ server<-function(input, output, session) {
   # Scale the predictors 
   mydata[,preds] <- scale(mydata[,preds],  scale = FALSE)
   
-  #if(sum(sapply(mydata[,preds], is.numeric)) != ncol(mydata[,preds]))
-  #{
-    #shinyalert("Column Error","Numeric columns are needed",type="error")
-    #returnValue()
-  #}
-  
   # Create matrices for the independent and dependent variables to use in SSVS.
   
   # predictor variables
@@ -464,69 +412,131 @@ server<-function(input, output, session) {
   if (input$randomFixed == "fix"){ 
     set.seed(0820)
   }
+
+  ##### Running the SSVS analysis 
+
+  #### Set up stuff to run either of the functions -----------------------------------------------------------
   
-  ##### Running the SSVS function
+  ### SSVS() stuff
   
-  # Run the SSVS analysis -----------------------------------------------------------
-  
-  # Setup the analysis
-  # set.seed(0820)
   n <- nrow(values$predsSSVS)
   p <- ncol(values$predsSSVS)
   xp     <- matrix(0,25,as.numeric(p))
   xp[,1] <- seq(-3,3,length=25)
   values$xp <- xp
-
   
-  # Create a table of the results -----------------------
+  ### BoomSpikeSlab stuff
+  
+  # Set niter by combineing the burn-in and total run numbers that users specify
+  niterations <- as.numeric(input$RunsValue) + as.numeric(input$BurnInValue)
+  
+  # Specify rrior provided by user
+  priorValue <- as.numeric(input$PriorValue)
+  
+  # Make a column of 1s for the design matrix 
+  intercept <- rep(x = 1,
+                   nrow(mydata))
+  
+  # Create design matrix that includes the column of 1s, and the predictors
+  values$designMatrix <- as.matrix(cbind(intercept,
+                                  values$predsSSVS))
+  
+  # Save the prior value to use
+  myPrior <- LogitZellnerPrior(predictors = values$designMatrix,
+                               successes = values$dependentSSVS,
+                               trials = NULL,
+                               expected.model.size = (ncol(values$predsSSVS)*priorValue),
+                               prior.inclusion.probabilities = NULL)
+  
+  #### Overarching reactive element -----------------------------------------------------------
   output$resultsDF <- renderTable({
+    
+    # if dichotomous use logit.spike(); else use
+    if (input$logistic == "dichotomous"){
+      
+  ### Run boomSpikeSlab
     if (is.null(input$file1))
       return()
     
-    # I may need to add a button here for is.null(input$go)
+    # Progress bar
     withProgress(message = "Please wait, SSVS analysis is running", value=0.1, {
       
-      values$ssvsResults <- SSVS(y = values$dependentSSVS, x = values$predsSSVS, xp = values$xp, runs = as.numeric(input$RunsValue), burn = as.numeric(input$BurnInValue), inprob = as.numeric(input$PriorValue))
+      ## Run the BoomSpikeSlab analysis -----------------------------------------------------------
       
-      ssvsResults<-values$ssvsResults
+      # Run logit.spike function
+      values$ssvsResults <- BoomSpikeSlab::logit.spike(formula = values$dependentSSVS ~
+                                                         values$predsSSVS,
+                                                       niter = niterations, 
+                                                       prior = myPrior)
       
-      # Feed the non-reactive results into a table, and make that table a reactive value
-      resultsTable<-as.data.frame(apply(ssvsResults$beta!=0,2,mean))
-      resultsTable$var<-rownames(resultsTable)
-      resultsTable$DV<-as.character(input$Dependent)
-      names(resultsTable)<-c("Inclusion_probability","Variable_name","Dependent_variable")
-      resultsTable<-resultsTable[order(-resultsTable$Inclusion_probability),]
+      # Save results locally
+      ssvsResults <- values$ssvsResults
+      
+      ### Save all the Betas
+      boomAllBetas <- as.data.frame(ssvsResults[["beta"]])[,-1]
+      colnames(boomAllBetas) <- colnames(values$predsSSVS) 
+      
+      # Save number of non-zero betas
+      boomMIPequivalent <- colSums(boomAllBetas != 0)/nrow(boomAllBetas)
+      
+      # Reshape  and rename dataframe of means
+      resultsTable <- as.data.frame(boomMIPequivalent)
+      resultsTable$var <- rownames(resultsTable)
+      resultsTable$DV <- as.character("binary outcome") # input$Dependent
+      names(resultsTable) <- c("Inclusion_probability",
+                               "Variable_name",
+                               "Dependent_variable")
+      resultsTable <- resultsTable[order(-resultsTable$Inclusion_probability),]
       
       # Save the results as a reactive value
-      values$resultsTable<-resultsTable
-       }
+      values$resultsTable <- resultsTable
+      
+      # Save the results as a reactive value
+      values$resultsTable <- resultsTable
+    }
     )
     
     # Print the results in a table
     values$resultsTable
     
+
+  } else {
+  
+  #### Run SSVS()
+    if (is.null(input$file1))
+      return()
+    
+    # Progress bar
+    withProgress(message = "Please wait, SSVS analysis is running", value=0.1, {
+      
+      values$ssvsResults <- SSVS(y = values$dependentSSVS, 
+                                 x = values$predsSSVS, 
+                                 xp = values$xp, 
+                                 runs = as.numeric(input$RunsValue), 
+                                 burn = as.numeric(input$BurnInValue), 
+                                 inprob = as.numeric(input$PriorValue))
+      
+      ssvsResults<-values$ssvsResults
+      
+      # Feed the non-reactive results into a table, and make that table a reactive value
+      resultsTable <- as.data.frame(apply(ssvsResults$beta!=0,2,mean))
+      resultsTable$var <- rownames(resultsTable)
+      resultsTable$DV <- as.character(input$Dependent)
+      names(resultsTable) <- c("Inclusion_probability","Variable_name","Dependent_variable")
+      resultsTable < -resultsTable[order(-resultsTable$Inclusion_probability),]
+      
+      # Save the results as a reactive value
+      values$resultsTable <- resultsTable
+       }
+    )
+    
+    # Print the results in a table
+    values$resultsTable
+  
+  }
+  
   })
   
-  # Updating the status bar
-
-  #values$dependentSSVS
-  
-  output$contents <- renderText({
-    varClass <- as.vector(sapply(df(),class))
-    #return(str(values$dependentSSVS))
-    # if (class(values$dependentSSVS == 'factor')){
-    #   return("Error. Please convert factor variables to perform the analysis.")
-    # }
-     if (sum(is.na(values$dependentSSVS))>0){
-       return(paste(c("Error.",sum(is.na(df())),"missing values found. Please remove to perform the analysis")))
-     }
-     if (ncol(values$predsSSVS) <= 1){
-       return("Error. Please select at least two predictors")
-     }
-     return(paste(c("Calculation complete.",input$RunsValue, "MCMC iterations run, results for",as.numeric(input$RunsValue)
-                    -as.numeric(input$BurnInValue), "iterations post-warmup shown below.")))
-  })
-
   # Download the results table -----------------------
   
   output$download <- downloadHandler(
@@ -535,10 +545,25 @@ server<-function(input, output, session) {
       write.csv(values$resultsTable, x)
     })
   
+  # Updating the status bar
   
-
+  #values$dependentSSVS
   
-  
+  output$contents <- renderText({
+    varClass <- as.vector(sapply(df(),class))
+    #return(str(values$dependentSSVS))
+    # if (class(values$dependentSSVS == 'factor')){
+    #   return("Error. Please convert factor variables to perform the analysis.")
+    # }
+    if (sum(is.na(values$dependentSSVS))>0){
+      return(paste(c("Error.",sum(is.na(df())),"missing values found. Please remove to perform the analysis")))
+    }
+    if (ncol(values$predsSSVS) <= 1){
+      return("Error. Please select at least two predictors")
+    }
+    return(paste(c("Calculation complete.",input$RunsValue, "MCMC iterations run, results for",as.numeric(input$RunsValue)
+                   -as.numeric(input$BurnInValue), "iterations post-warmup shown below.")))
+  })
   # Create a plot of the results -----------------------
   output$resultsPlot <- renderPlot({
     
