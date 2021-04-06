@@ -485,18 +485,13 @@ server<-function(input, output, session) {
   # Pop up window using base Shiny (PLACEHOLDER CODE)
   dataModal <- function(failed = FALSE) {
     modalDialog(
-      textInput("dataset", "Choose data set",
-                placeholder = 'Try "mtcars" or "abc"'
-      ),
-      span('(Try the name of a valid data object like "mtcars", ',
-           'then a name of a non-existent object like "abc")'),
-      if (failed)
-        div(tags$b("Invalid name of data object", style = "color: red;")),
-      
+      title = "Alert: Missing values","There are missing values in your selection. Would you like them to be removed?",
+      "This will reduce your sample size from",paste(c(nrow(values$dependentSSVS)),"to", length(complete.cases(values$dependentSSVS))),
       footer = tagList(
-        modalButton("Cancel"),
-        actionButton("ok", "OK")
-      )
+        modalButton("No. I'll remove them myself"),
+        actionButton("ok", "Yes, remove them automatically")
+      ),
+      easyClose = F
     )
   }
   
@@ -504,6 +499,12 @@ server<-function(input, output, session) {
   if (sum(is.na(values$dependentSSVS))>0){
   showModal(dataModal())
   }
+  
+  observeEvent(input$ok, {
+  values$dependentSSVS <- complete.cases(values$dependentSSVS)
+  removeModal()
+  })
+  
   
   # randomFixed set.seed
   if (input$randomFixed == "fix"){ 
