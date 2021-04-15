@@ -475,7 +475,7 @@ server<-function(input, output, session) {
   # outcome variable
   values$dependentSSVS <- as.matrix(mydata[,dependent])
 
-  # Pop up window using base Shiny (PLACEHOLDER CODE)
+  # Pop up window using base Shiny
   dataModal <- function(failed=F) {
     modalDialog(
       title = "Alert: Missing values","There are missing values in your selection. Would you like them to be removed?",
@@ -557,8 +557,8 @@ server<-function(input, output, session) {
     # if (class(values$dependentSSVS == 'factor')){
     #   return("Error. Please convert factor variables to perform the analysis.")
     # }
-     if (sum(is.na(values$dependentSSVS))>0){
-       return(paste(c("Error.",sum(is.na(values$dependentSSVS)),"missing values found. Please remove to perform the analysis")))
+     if (sum(is.na(values$dependentSSVS))>0||sum(is.na(values$predsSSVS))>0){
+       return(paste(c("Error.",sum(is.na(values$dependentSSVS))+sum(is.na(values$predsSSVS)),"missing values found. Please remove to perform the analysis")))
      }
      if (ncol(values$predsSSVS) <= 1){
        return("Error. Please select at least two predictors")
