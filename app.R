@@ -471,15 +471,17 @@ server<-function(input, output, session) {
   
   # predictor variables
   values$predsSSVS <- as.matrix(mydata[,preds])
+
   
   # outcome variable
   values$dependentSSVS <- as.matrix(mydata[,dependent])
+ 
 
-  # Pop up window using base Shiny
+  # Pop up window for any missing variables
   dataModal <- function(failed=F) {
     modalDialog(
       title = "Alert: Missing values","There are missing values in your selection. Would you like them to be removed?",
-      "This will reduce your sample size from",paste(c(nrow(values$dependentSSVS)),"to", sum(!is.na(values$dependentSSVS))),
+      "This will reduce your sample size from",paste(c(nrow(values$dependentSSVS)),"to", nrow(values$dependentSSVS)-(sum(is.na(values$dependentSSVS))+sum(is.na(values$predsSSVS)))),
       footer = tagList(
         modalButton("No, I'll remove them myself."),
         actionButton("ok", "Yes, remove them automatically.")
@@ -487,16 +489,19 @@ server<-function(input, output, session) {
       easyClose = F
     )
   }
-  
-  # Activate pop-up window if dependent variable has missing values
-  if (sum(is.na(values$dependentSSVS))>0){
-  showModal(dataModal())
+
+  # Triggers pop up window if any missing variables are selected
+  if (sum(is.na(values$dependentSSVS))+sum(is.na(values$predsSSVS))>0){
+    showModal(dataModal())
   }
   
+  # If user chooses to automatically remove, this will use only complete cases in predictors and dependent
   observeEvent(input$ok, {
-  values$predsSSVS <- values$predsSSVS[complete.cases(values$dependentSSVS),]
-  values$dependentSSVS <- values$dependentSSVS[complete.cases(values$dependentSSVS)]
-  removeModal()
+    values$predsSSVS <- values$predsSSVS[complete.cases(values$dependentSSVS),]
+    values$dependentSSVS <- values$dependentSSVS[complete.cases(values$dependentSSVS)]
+    values$dependentSSVS <- values$dependentSSVS[complete.cases(values$predsSSVS)]
+    values$predsSSVS <- values$predsSSVS[complete.cases(values$predsSSVS),]
+    removeModal()
   })
   
   
