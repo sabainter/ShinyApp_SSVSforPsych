@@ -482,24 +482,9 @@ server<-function(input, output, session) {
   # Set niter by combineing the burn-in and total run numbers that users specify
   values$niterations <- as.numeric(input$RunsValue) + as.numeric(input$BurnInValue)
   
-  # Specify rrior provided by user
+  # Specify prior provided by user
   values$priorValue <- as.numeric(input$PriorValue)
   
-  # Make a column of 1s for the design matrix 
-  values$intercept <- rep(x = 1,
-                          nrow(mydata))
-  
-  # Create design matrix that includes the column of 1s, and the predictors
-  values$designMatrix <- as.matrix(cbind(values$intercept,
-                                         values$predsSSVS))
-  
-  # Save the prior value to use
-  values$myPrior <- LogitZellnerPrior(predictors = values$designMatrix,
-                                      successes = values$dependentSSVS,
-                                      trials = NULL,
-                                      expected.model.size = (ncol(values$predsSSVS)*values$priorValue),
-                                      prior.inclusion.probabilities = NULL)
-
   ### SSVS() stuff
   
   n <- nrow(values$predsSSVS)
@@ -519,6 +504,25 @@ server<-function(input, output, session) {
       ### BoomSpikeSlab
           
       if (input$logistic == "dichotomous"){
+      
+
+        # Make a column of 1s for the design matrix 
+        values$intercept <- rep(x = 1,
+                                nrow(values$predsSSVS))
+        
+        # Create design matrix that includes the column of 1s, and the predictors
+        values$designMatrix <- as.matrix(cbind(values$intercept,
+                                               values$predsSSVS))
+        
+        # Save the prior value to use
+        values$myPrior <- LogitZellnerPrior(predictors = values$designMatrix,
+                                            successes = values$dependentSSVS,
+                                            trials = NULL,
+                                            expected.model.size = (ncol(values$predsSSVS)*values$priorValue),
+                                            prior.inclusion.probabilities = NULL)
+        
+        
+        
         
       ## logit.spike()
       values$ssvsResults <- BoomSpikeSlab::logit.spike(formula = values$dependentSSVS ~
@@ -579,8 +583,11 @@ server<-function(input, output, session) {
     # if (class(values$dependentSSVS == 'factor')){
     #   return("Error. Please convert factor variables to perform the analysis.")
     # }
-    if (sum(is.na(values$dependentSSVS))>0||sum(is.na(values$predsSSVS))>0){
+    if ((sum(is.na(values$dependentSSVS))>0||sum(is.na(values$predsSSVS))>0)&&input$logistic == "continuous"){
       return(paste(c("Error.",sum(is.na(values$dependentSSVS))+sum(is.na(values$predsSSVS)),"missing values found. Please remove to perform the analysis")))
+    }
+    else if (sum(is.na(values$predsSSVS))>0&&input$logistic == "dichotomous"){
+      return(paste(c("Error.",sum(is.na(values$predsSSVS)),"missing values found. Please remove to perform the analysis")))
     }
     if (ncol(values$predsSSVS) <= 1){
       return("Error. Please select at least two predictors")
