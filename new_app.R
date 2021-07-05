@@ -9,6 +9,7 @@ library(dplyr)
 library(formattable)
 library(shinyalert)
 library(BoomSpikeSlab)
+library(bayestestR)
 
 # toKeep function--------------
 
@@ -428,7 +429,7 @@ server<-function(input, output, session) {
   dependent <- input$Dependent
 
   # Scale the predictors 
-  mydata[,preds] <- scale(mydata[,preds],  scale = FALSE)
+  mydata[,preds] <- scale(mydata[,preds], scale=FALSE)
   
   # Create matrices for the independent and dependent variables to use in SSVS.
   
@@ -530,10 +531,24 @@ server<-function(input, output, session) {
                                                                              niter = values$niterations, 
                                                                              prior = values$myPrior)
       
-      ## post-processing
-      
       # Remove the burnin values
       boomAllBetas <- as.data.frame(values$ssvsResults[["beta"]])[-c(1:values$burnInValue),-1]
+      
+      average.beta <- matrix(0,length(boomAllBetas),1)
+      lower.credibility <- matrix(0,length(boomAllBetas),1)
+      upper.credibility <- matrix(0,length(boomAllBetas),1)
+      
+      for (m in 1:length(names(boomAllBetas))){
+        average.beta[m,1] <- mean(boomAllBetas[,m])
+        # 95% credibility interval lower
+        lower.credibility[m,1] <- ci(boomAllBetas[,m], method = "HDI",ci = .95)[[2]]
+        # 95% credibility interval upper
+        upper.credibility[m,1] <- ci(boomAllBetas[,m], method = "HDI",ci = .95)[[3]]
+      }
+      
+
+      ## post-processing
+      
       # Rename the columns
       colnames(boomAllBetas) <- colnames(values$predsSSVS) 
       # Save number of non-zero betas after throwing out the burn-in iterations 
@@ -552,6 +567,24 @@ server<-function(input, output, session) {
                                    burn = as.numeric(input$BurnInValue), 
                                    inprob = as.numeric(input$PriorValue))
         
+        
+        
+        temp.beta.frame <- as.data.frame(values$ssvsResults[["beta"]])
+        
+        average.beta <- matrix(0,length(temp.beta.frame),1)
+        lower.credibility <- matrix(0,length(temp.beta.frame),1)
+        upper.credibility <- matrix(0,length(temp.beta.frame),1)
+        
+        for (m in 1:length(names(temp.beta.frame))){
+          average.beta[m,1] <- mean(temp.beta.frame[,m])
+          # 95% credibility interval lower
+          lower.credibility[m,1] <- ci(temp.beta.frame[,m], method = "HDI",ci = .95)[[2]]
+          # 95% credibility interval upper
+          upper.credibility[m,1] <- ci(temp.beta.frame[,m], method = "HDI",ci = .95)[[3]]
+        }
+        
+        
+        
         ## post-processing
         
         # Save number of non-zero betas 
@@ -561,10 +594,15 @@ server<-function(input, output, session) {
       ### Make a table of the results
       resultsTable <- as.data.frame(values$eitherResults)
       resultsTable$var <- rownames(resultsTable)
-      resultsTable$DV <- as.character(input$Dependent)
-      names(resultsTable) <- c("Inclusion_probability","Variable_name","Dependent_variable")
-      resultsTable <- resultsTable[order(-resultsTable$Inclusion_probability),]
       
+      resultsTable$beta <-  average.beta
+      resultsTable$lower <- lower.credibility
+      resultsTable$upper <- upper.credibility
+      resultsTable$DV <- as.character(input$Dependent)
+      resultsTable <- resultsTable[,c(2,1,3,4,5,6)]
+      names(resultsTable)<-c("Variable_name","Inclusion_probability","Average Coefficient","Lower Credibility","Upper Credibility","Dependent_variable")
+      # names(resultsTable)<-c("Inclusion_probability","Coefficient","Variable_name","Dependent_variable")
+      resultsTable <- resultsTable[order(-resultsTable$Inclusion_probability),]
       # Save the results as a reactive value
       values$resultsTable <- resultsTable
       
