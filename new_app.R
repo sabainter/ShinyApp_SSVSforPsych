@@ -127,7 +127,7 @@ ui <- shinyUI(
     # 
     tags$strong("Pre-requisites and constraints"),
 
-    p("Unfortunately, SSVS cannot handle variables with a categorical data structure. In addition, SSVS requires predictor variables to be standardized before analysis: because the priors have a fixed scale, predictors on different scales will differentially influence results. Because of this, SSVSforPsych automatically standardizes all predictors selected for analysis. Finally, SSVS cannot analyze data with missing values, so please upload data that has complete cases."),
+    p("SSVS cannot handle variables with a categorical data structure. In addition, SSVS requires predictor variables to be standardized before analysis: because the priors have a fixed scale, predictors on different scales will differentially influence results. Because of this, SSVSforPsych automatically standardizes all predictors selected for analysis. Finally, SSVS cannot analyze data with missing values, so please upload data that has complete cases."),
 
     #htmlOutput("missingNote"),
     
