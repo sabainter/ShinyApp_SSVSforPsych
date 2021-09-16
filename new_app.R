@@ -118,15 +118,15 @@ ui <- shinyUI(
     # 
     # tags$strong("The purpose of SSVS, and how to use this tool"),
     # 
-    # p("The overall goal of SSVS is to provide information about the relative importance of predictors, accounting for uncertainty in which other predictors are included in the model. SSVS samples thousands of regression models in order to characterize the model uncertainty regarding both the predictor set and the regression parameters. The models are selected using a sampling process that is designed to select among “good” models, that is, models with high probability."),
+    # p("SSVS is a Bayesian variable selection method that provides information about the relative importance of predictors, accounting for uncertainty in which other predictors are included in the model. SSVS uses Markov chain Monte Carlo (MCMC) estimation to characterize the uncertainty regarding both the predictor set and the regression coefficients. The MCMC method samples thousands of “good” models, that is, models with high probability."),
     #   
-    # p("After sampling, rather than selecting the best model according to a specified criterion (e.g., the best Akaike’s or Bayesian information criterion or the highest model R2), researchers can examine the proportion of times each predictor was selected, which provides information about which predictors reliably predict the outcome, accounting for uncertainty in the other predictors in the model. Please see Bainter, McCauley, Wager, and Losin (2020) for more details."),
     # 
-    # p("The key quantity obtained by SSVS is the marginal inclusion probability (MIP), which is the proportion of times each predictor was included in the sampled models. Predictors with higher MIPs are consistent predictors of the dependent variable, accounting for uncertainty in the other variables included in the models."),
+    # p("The key quantity obtained by SSVS is the marginal inclusion probability (MIP), which is the proportion of times each predictor was included in the sampled models. Predictors with higher MIPs are consistent predictors of the dependent variable, accounting for uncertainty in the other variables included in the models. Please see Bainter, McCauley, Wager, and Losin (2020) for more details."),
     # 
     tags$strong("Pre-requisites and constraints"),
 
-    p("SSVS cannot handle variables with a categorical data structure. In addition, SSVS requires predictor variables to be standardized before analysis: because the priors have a fixed scale, predictors on different scales will differentially influence results. Because of this, SSVSforPsych automatically standardizes all predictors selected for analysis. Finally, SSVS cannot analyze data with missing values, so please upload data that has complete cases."),
+    p("The requirements for SSVS are similar to requirements for standard regression analysis. Currently this application contains functionality for linear and logistic regression. Categorical predictors must be coded using an appropriate scheme (e.g. dummy coding). Any cases with missing data on any of the selected predictor variables will be excluded from the analysis (listwise deletion). There is currently no acceptable procedure for combining results from multiply imputed data sets. Check the Data Descriptives tab to make sure your data imported correctly (e.g. check missing data codes)."),
+    p("Because the priors have a fixed scale, predictors on different scales will differentially influence results. SSVSforPsych automatically standardizes the predictors selected for analysis."),
 
     #htmlOutput("missingNote"),
     
@@ -141,54 +141,49 @@ ui <- shinyUI(
   
     # Prior inclusion probablility
     tags$strong("Prior inclusion probablility"),
-    p("Please select the prior inclusion probablility value. Please consider the number of variables that you have when selecting the prior. For example, if you include 75
-predictors and set the prior inclusion probability at 0.50 (as Bainter et al. (2020) do in their empirical analysis), this implies the prior belief that 37.5 predictors belong in the true model. The value selected will influence the magnitude of the MIPs, but the relative pattern of MIPS should remain fairly consistent."),
+    p("Please select the prior inclusion probablility value, which is applied to all predictors. The prior inclusion probability reflects the belief that each predictor should be included in the model. A prior probability of .5 (the default) reflects the belief that each predictor has an equal probability of being included or excluded. Note that a value of .5 also implies a prior belief that the true model contains half of the candidate predictors. As shown in Bainter et al. (2020), the prior inclusion probability will influence the magnitude of the marginal inclusion probabilities (MIPs), but the relative pattern of MIPS is expected to remain fairly consistent."),
     uiOutput("ui.PriorProb"),
     tags$hr(),
   
     # Burn-in iterations
     tags$strong("Burn-in iterations"),
-    p("Please select the number of burn-in iterations. Burn-ins are the number of discarded warmup iterations used to achieve  Markov chain Monte Carlo (MCMC) estimation convergence. You may increase the number of burn-in iterations if you are having convergence issues."),
+    p("Burn-in iterations are the number of discarded warmup iterations used to achieve Markov chain Monte Carlo (MCMC) convergence. You may increase the number of burn-in iterations if you are having convergence issues."),
     uiOutput("ui.BurnIn"),
     tags$hr(),
     
     # Iterations
     tags$strong("Total number of iterations (inclusive of burn-in)"),
-    p("Please select the total number of iterations. The number of iterations indicates the number of models sampled by SSVS. We recommend 10,000 iterations as a reasonable number of iterations that balances precision and computational efficiency."),
+    p("The total number of iterations indicates the number of models sampled. Results are based on the Total - Burn-in iterations."),
     uiOutput("ui.Runs"),
     tags$hr(),
     
     # Fixed or random start values
     tags$strong("Fixed or random start values"),
-    p("Please indicate whether you want to use fixed or random start values in your analysis. Fixed values will result in a perfectly reproducible solution produced in each run. Random values will result in slighly variant, but highly similar solutions produced in each run."),
+    p("Fixed start values will result in a perfectly reproducible solution produced in each run. Random start values allow for slight variations in results due to the randomness inherent in MCMC estimation. Checking results with different starting values is a useful method for checking convergence."),
     uiOutput("ui.randomFixed"),
     tags$hr(),
     
     # Dependent variable
     tags$strong("Dependent variable"),
-    p("Please select the dependent variable in your analysis."),
+
     uiOutput("ui.Dependent"),
     tags$hr(),
     
-    # Is the predictor variable dichotomous?
+    # Is the dependent variable dichotomous?
     tags$strong("Is the dependent variable dichotomous or continuous?"),
-    p("Please indicate whether the dependent variable is dichotomous or continuous. If the the dependent variable is dichotomous, then the analysis will use the logit.spike() function from the BoomSpikeSlab package. If the the dependent variable is continous, then the analysis will use the R code provided by Dr. Brian Reich"),
+    p("If the dependent variable is continuous, the analysis will proceed using a standard Gibbs sampler. If the dependent variable is dichotomous, SSVS results will be provided using the logit.spike() function from the BoomSpikeSlab package."),
     uiOutput("ui.logistic"),
     tags$hr(),
     
-    # Predictor variables
-    tags$strong("Predictor variables"),
-    p("Please select the predictor variables in your analysis."),
+    # Candidate predictors
+    tags$strong("Candidate predictors"),
+    p("Please select the candidate predictor variables in your analysis."),
     uiOutput("ui.Predictors"),
     tags$hr(),
     
     # Go button
     uiOutput("ui.go"),
     tags$hr(),
-    
-    # Acknowledgements
-    tags$strong("Acknowledgements"),
-    p("Thank you to Dr. Brian Reich of NCSU (https://www4.stat.ncsu.edu/~reich/) for posting R code for SSVS, which was used to help build this app."),
     
     # Contact us
     tags$strong("Contact Us"),
@@ -212,7 +207,7 @@ predictors and set the prior inclusion probability at 0.50 (as Bainter et al. (2
                          p("The key quantity obtained by SSVS is the marginal inclusion probability (MIP), which is the proportion of times each predictor was included in the sampled models. Predictors with higher MIPs are consistent predictors of the dependent variable, accounting for uncertainty in the other variables included in the models."),
                          h4("How to cite:"),
                          
-                         p("This web tool may be cited in APA style in the following manner:"),
+                         p("This web tool may be cited in APA style as:"),
                          
                          p("Bainter, S. A., McCauley, T. G., Wager, T., & Losin, E. A. R. (2020). Improving practices for selecting a subset of important predictors in psychology: An application to predicting pain. Advances in Methods in Psychological Science, XX(X), XXXX-XXXX. https://doi.org/10.1177/2515245919885617"),
                          
