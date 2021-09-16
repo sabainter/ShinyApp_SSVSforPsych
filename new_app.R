@@ -109,20 +109,7 @@ ui <- shinyUI(
                   h3("An interactive web tool for performing stochastic search variable selection"))),
   
   sidebarPanel(
-    
-    # tags$strong("How to cite"),
-    # 
-    # p("This web tool may be cited in APA style in the following manner:"),
-    # 
-    # p("Bainter, S. A., McCauley, T. G., Wager, T., & Losin, E. A. R. (2020). Improving practices for selecting a subset of important predictors in psychology: An application to predicting pain. Advances in Methods in Psychological Science, 3(1), 66-80. https://doi.org/10.1177/2515245919885617"),
-    # 
-    # tags$strong("The purpose of SSVS, and how to use this tool"),
-    # 
-    # p("SSVS is a Bayesian variable selection method that provides information about the relative importance of predictors, accounting for uncertainty in which other predictors are included in the model. SSVS uses Markov chain Monte Carlo (MCMC) estimation to characterize the uncertainty regarding both the predictor set and the regression coefficients. The MCMC method samples thousands of “good” models, that is, models with high probability."),
-    #   
-    # 
-    # p("The key quantity obtained by SSVS is the marginal inclusion probability (MIP), which is the proportion of times each predictor was included in the sampled models. Predictors with higher MIPs are consistent predictors of the dependent variable, accounting for uncertainty in the other variables included in the models. Please see Bainter, McCauley, Wager, and Losin (2020) for more details."),
-    # 
+
     tags$strong("Pre-requisites and constraints"),
 
     p("The requirements for SSVS are similar to requirements for standard regression analysis. Currently this application contains functionality for linear and logistic regression. Categorical predictors must be coded using an appropriate scheme (e.g. dummy coding). Any cases with missing data on any of the selected predictor variables will be excluded from the analysis (listwise deletion). There is currently no acceptable procedure for combining results from multiply imputed data sets. Check the Data Descriptives tab to make sure your data imported correctly (e.g. check missing data codes)."),
@@ -209,9 +196,8 @@ ui <- shinyUI(
                          
                          p("This web tool may be cited in APA style as:"),
                          
-                         p("Bainter, S. A., McCauley, T. G., Wager, T., & Losin, E. A. R. (2020). Improving practices for selecting a subset of important predictors in psychology: An application to predicting pain. Advances in Methods in Psychological Science, XX(X), XXXX-XXXX. https://doi.org/10.1177/2515245919885617"),
+                         p("Bainter, S. A., McCauley, T. G., Wager, T., & Losin, E. A. R. (2020). Improving practices for selecting a subset of important predictors in psychology: An application to predicting pain. Advances in Methods in Psychological Science, 3(1), 66-80. https://doi.org/10.1177/2515245919885617")),
                          
-                ),
                 tabPanel("Data descriptives",
                          tableOutput("varnames")), 
                 tabPanel("SSVS analysis results",
