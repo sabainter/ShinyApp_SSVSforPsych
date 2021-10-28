@@ -409,7 +409,7 @@ server<-function(input, output, session) {
   dependent <- input$Dependent
 
   # Scale the predictors 
-  mydata[,preds] <- scale(mydata[,preds], scale=FALSE)
+  mydata[,preds] <- scale(mydata[,preds])
   
   # Create matrices for the independent and dependent variables to use in SSVS.
   
