@@ -96,19 +96,25 @@ ui <- shinyUI(
   
   fluidPage(
     
-    tags$style(type="text/css",
-               ".shiny-output-error { visibility: hidden; }",
-               ".shiny-output-error:before { visibility: hidden; }",
-               "h1, h3 {
-               text-align:center;
-               }"
- 
+    tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
     ),
     
-    titlePanel(h1("SSVSforPsych",
-                  h3("An interactive web tool for performing stochastic search variable selection"))),
+    # tags$style(type="text/css",
+    #            ".shiny-output-error { visibility: hidden; }",
+    #            ".shiny-output-error:before { visibility: hidden; }",
+    #            "h1, h3 {
+    #            text-align:center;
+    #            }"
+    # 
+    # ),
+
+    titlePanel(h1("SSVSforPsych",tags$img(src = "logo.png",height='100',width='100',style= 'position:absolute; right:42px; top:5px;'),
+                  h3("An interactive web tool for performing stochastic search variable selection"))),    
+    # titlePanel(h1("SSVSforPsych",
+    #               h3("An interactive web tool for performing stochastic search variable selection"))),
   
   sidebarPanel(
+    tags$style(HTML('.well {background-color:#BBC2E2;}')),
 
     tags$strong("Pre-requisites and constraints"),
 
